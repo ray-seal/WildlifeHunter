@@ -1,81 +1,92 @@
 import { useState } from "react";
 
-const wildlifeList = [
-  { name: "Smooth Newt", type: "small", region: "England" },
-  { name: "Stag Beetle", type: "small", region: "England" },
-  { name: "Fox", type: "medium", region: "UK" },
-  { name: "Badger", type: "medium", region: "UK" },
-  { name: "Welsh Dragon", type: "mythical", region: "Wales" },
+// Dummy pixel map as a grid for now; replace with an actual pixel-art map image later.
+const counties = [
+  {
+    name: "London",
+    unlocked: true,
+    wildlife: ["Red Fox", "Grey Squirrel"],
+    placesOfInterest: [
+      { name: "Buckingham Palace", type: "landmark", wildlife: ["Mute Swan"], x: 3, y: 2 },
+      { name: "O2 Arena", type: "arena", wildlife: ["Pigeon"], x: 5, y: 4 }
+    ]
+  },
+  { name: "Kent", unlocked: false, wildlife: ["Dormouse"], placesOfInterest: [] },
+  { name: "Surrey", unlocked: false, wildlife: ["Stag Beetle"], placesOfInterest: [] },
+  // add more counties as needed
 ];
 
-const tools = {
-  small: "Net",
-  medium: "Cage",
-  mythical: "Chain",
-};
-
-function getRandomWildlife(region = "UK") {
-  const filtered = wildlifeList.filter(
-    (w) => w.region === region || w.region === "UK"
+function Map({ counties, onSelectCounty, selectedCounty }) {
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", width: 240, margin: "2rem auto" }}>
+      {counties.map((county, i) => (
+        <div
+          key={county.name}
+          onClick={() => county.unlocked && onSelectCounty(county.name)}
+          style={{
+            width: 80, height: 80, border: "2px solid black", margin: 2,
+            background: county.unlocked ? (county.name === selectedCounty ? "#8ef" : "#dfd") : "#aaa",
+            cursor: county.unlocked ? "pointer" : "not-allowed",
+            display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold"
+          }}
+        >
+          {county.name}
+        </div>
+      ))}
+    </div>
   );
-  return filtered[Math.floor(Math.random() * filtered.length)];
+}
+
+function Places({ places, onVisit }) {
+  return (
+    <div>
+      <h3>Places of Interest</h3>
+      {places.length === 0 && <p>No places yet.</p>}
+      <ul>
+        {places.map((place, i) => (
+          <li key={i}>
+            <button onClick={() => onVisit(place)}>{place.name} ({place.type})</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 export default function Game() {
-  const [region, setRegion] = useState("England");
-  const [wildlife, setWildlife] = useState(null);
+  const [selectedCounty, setSelectedCounty] = useState("London");
+  const [currentPlace, setCurrentPlace] = useState(null);
   const [caught, setCaught] = useState([]);
 
-  const handleExplore = () => {
-    const found = getRandomWildlife(region);
-    setWildlife(found);
-  };
+  const county = counties.find(c => c.name === selectedCounty);
 
-  const handleCatch = () => {
-    if (!wildlife) return;
-    // Simple catch logic
-    if (wildlife.name === "Welsh Dragon" && region !== "Wales") {
-      alert("The dragon only appears in Wales!");
-      return;
+  const handleVisitPlace = (place) => {
+    setCurrentPlace(place);
+    // For now, just auto-catch wildlife if present
+    if (place.wildlife && place.wildlife.length > 0) {
+      setCaught([...caught, ...place.wildlife]);
+      alert(`You found and caught: ${place.wildlife.join(", ")}!`);
     }
-    if (Math.random() > 0.4) {
-      setCaught([...caught, wildlife]);
-      alert(`You caught a ${wildlife.name}!`);
-    } else {
-      alert(`The ${wildlife.name} escaped!`);
-    }
-    setWildlife(null);
   };
 
   return (
     <div style={{ maxWidth: 600, margin: "2rem auto", textAlign: "center" }}>
-      <h2>Current Region: {region}</h2>
-      <div>
-        <button onClick={() => setRegion("England")}>England</button>
-        <button onClick={() => setRegion("Scotland")}>Scotland</button>
-        <button onClick={() => setRegion("Wales")}>Wales</button>
-        <button onClick={() => setRegion("Northern Ireland")}>
-          Northern Ireland
-        </button>
-      </div>
+      <h2>Wildlife Hunter: UK Map</h2>
+      <Map
+        counties={counties}
+        onSelectCounty={setSelectedCounty}
+        selectedCounty={selectedCounty}
+      />
+      <h3>Exploring: {county.name}</h3>
+      <Places
+        places={county.placesOfInterest}
+        onVisit={handleVisitPlace}
+      />
       <hr />
-      <button onClick={handleExplore} style={{ margin: "1rem" }}>
-        Explore!
-      </button>
-      {wildlife && (
-        <div>
-          <h3>You encountered a {wildlife.name}!</h3>
-          <button onClick={handleCatch}>
-            Use {tools[wildlife.type]}
-          </button>
-        </div>
-      )}
-      <hr />
-      <h3>Your Collection:</h3>
+      <h3>Your Collection</h3>
       <ul>
-        {caught.map((w, i) => (
-          <li key={i}>{w.name}</li>
-        ))}
+        {caught.length === 0 && <li>(none yet)</li>}
+        {caught.map((w, i) => <li key={i}>{w}</li>)}
       </ul>
     </div>
   );
