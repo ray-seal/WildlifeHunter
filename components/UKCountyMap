@@ -1,0 +1,71 @@
+import { useState } from "react";
+
+// Simple list of counties with coordinates for demo. Expand as needed.
+const counties = [
+  { name: "Kent", code: "kent", unlocked: true, x: 420, y: 320 },
+  { name: "London", code: "london", unlocked: false, x: 400, y: 260 },
+  { name: "Surrey", code: "surrey", unlocked: false, x: 380, y: 320 },
+  { name: "Essex", code: "essex", unlocked: false, x: 470, y: 300 },
+  { name: "Sussex", code: "sussex", unlocked: false, x: 415, y: 400 },
+  // Add more counties as needed
+];
+
+export default function UkCountyMap({ onCountyClick }) {
+  const [selected, setSelected] = useState("kent");
+
+  const handleClick = (county) => {
+    if (!county.unlocked) return;
+    setSelected(county.code);
+    if (onCountyClick) onCountyClick(county);
+  };
+
+  // SVG outline is a placeholder. Replace with a more accurate SVG map for production.
+  return (
+    <div style={{ textAlign: "center" }}>
+      <svg
+        width={600}
+        height={500}
+        viewBox="0 0 600 500"
+        style={{ background: "#d1ecf6", border: "2px solid #444" }}
+      >
+        {/* Simple outline of UK as a placeholder */}
+        <rect x="50" y="50" width="500" height="400" rx="100" fill="#b4e7a0" />
+        {/* County buttons as circles */}
+        {counties.map((county) => (
+          <g key={county.code}>
+            <circle
+              cx={county.x}
+              cy={county.y}
+              r={county.unlocked ? 28 : 20}
+              fill={county.unlocked ? (selected === county.code ? "#5ca9f3" : "#fbe76c") : "#bbb"}
+              stroke={county.unlocked ? "#222" : "#888"}
+              strokeWidth={county.unlocked ? 3 : 1}
+              style={{
+                cursor: county.unlocked ? "pointer" : "not-allowed",
+                opacity: county.unlocked ? 1 : 0.5,
+                transition: "fill 0.2s"
+              }}
+              onClick={() => handleClick(county)}
+            />
+            <text
+              x={county.x}
+              y={county.y + 4}
+              textAnchor="middle"
+              fontSize={county.unlocked ? 16 : 13}
+              fill={county.unlocked ? "#333" : "#888"}
+              pointerEvents="none"
+            >
+              {county.name}
+            </text>
+          </g>
+        ))}
+      </svg>
+      <div style={{ marginTop: 16 }}>
+        <b>
+          Selected County:{" "}
+          {counties.find((c) => c.code === selected)?.name ?? "None"}
+        </b>
+      </div>
+    </div>
+  );
+}
